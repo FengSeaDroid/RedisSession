@@ -1,30 +1,38 @@
-var app = require('./config/express')();
+var express = require('express'),
+    Redis = require('ioredis'),
+    logger = require('morgan'),
+    bodyParser = require('body-parser');
 
-/**
- * Setting up web server.
- */
-var boot = function () {
-    app.server = app.listen(app.get('port'), function () {
-        console.info('Express server listening on port ' + app.get('port'));
+var client = new Redis(6379, '192.168.59.103'),//CREATE REDIS CLIENT
+    app = express();
+
+app.use(logger("tiny"));
+app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.json());
+
+var router = express.Router();
+
+//GET KEY'S VALUE
+router.get('/redis/get/:key', function(req, response) {
+    client.get(req.params.key, function (error, val) {
+        if (error !== null) console.log("error: " + error);
+        else {
+            response.send("The value for this key is " + val);
+        }
     });
-};
+});
 
-/**
- * Server shutdown.
- */
-var shutdown = function () {
-    app.server.close();
-};
+//SET KEY'S VALUE
+router.get('/redis/set/:key/:value', function(req, response) {
+    client.set(req.params.key, req.params.value, function (error, result) {
+        if (error !== null) console.log("error: " + error);
+        else {
+            response.send("The value for '"+req.params.key+"' is set to: " + req.params.value);
+        }
+    });
+});
 
-/**
- * If run with main thread start server, otherwise exports major functionalities.
- */
-if (require.main === module) {
-    boot();
-} else {
-    console.info('Running app as a module');
-    exports.boot = boot;
-    exports.shutdown = shutdown;
-    exports.app = app;
-    exports.port = app.get('port');
-}
+app.use('/', router);
+var server = app.listen(8097, function() {
+    console.log('BASIC REDIS server is listening on port %d', server.address().port);
+});
