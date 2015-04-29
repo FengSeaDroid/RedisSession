@@ -12,12 +12,12 @@ module.exports = function () {
     app.use(cookieParser('yousecretcode'));
     app.use(expressSession({secret: 'yourothersecretcode', saveUninitialized: true, resave: true}));
 
-    app.get('/session/set/:value', function(req, res) {
+    app.get('/set/:value', function(req, res) {
         req.session.mySession = req.params.value;
         res.send('session write success');
     });
 
-    app.get('/session/get/', function(req, res) {
+    app.get('/', function(req, res) {
         if(req.session.mySession)
             res.send('the session value is: ' + req.session.mySession);
         else
